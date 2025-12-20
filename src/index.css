@@ -1,0 +1,658 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   CROSS-DEVICE COMPATIBILITY STYLES
+   Supports: Android, iOS, Tablets, iPads
+   All versions and screen sizes
+======================================== */
+
+/* Base reset with maximum compatibility */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* HTML base - cross-browser compatible */
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Prevent iOS font scaling */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Body with full viewport support */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', system-ui, sans-serif;
+    background-color: #0f172a;
+    color: #f1f5f9;
+    line-height: 1.5;
+    /* Multiple viewport units for maximum compatibility */
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Root container with full height */
+#root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+}
+
+/* Safe area padding for notched devices (iPhone X+, Android with notch) */
+.safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: constant(safe-area-inset-top, 0px);
+    /* iOS 11.0-11.2 */
+}
+
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
+    /* iOS 11.0-11.2 */
+}
+
+.safe-area-left {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-left: constant(safe-area-inset-left, 0px);
+}
+
+.safe-area-right {
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-right: constant(safe-area-inset-right, 0px);
+}
+
+/* Touch-friendly inputs - prevents zoom on iOS */
+input,
+select,
+textarea,
+button {
+    font-size: 16px !important;
+    /* Prevents iOS zoom on focus */
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Fix for iOS date/time inputs */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    min-height: 48px;
+}
+
+/* Fix for select dropdowns on all devices */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px 12px;
+    padding-right: 40px;
+}
+
+/* Custom scrollbar - works on Chrome, Safari, Edge */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1e293b;
+}
+
+/* ========================================
+   ANIMATIONS with vendor prefixes
+======================================== */
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes slideUp {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(20px);
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(20px);
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+@-webkit-keyframes slideDown {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(-20px);
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        -webkit-transform: translateY(-20px);
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+}
+
+@-webkit-keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@-webkit-keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+.animate-fade-in {
+    -webkit-animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+    -webkit-animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.3s ease-out;
+}
+
+.animate-slide-down {
+    -webkit-animation: slideDown 0.3s ease-out;
+    animation: slideDown 0.3s ease-out;
+}
+
+.animate-pulse {
+    -webkit-animation: pulse 2s infinite;
+    animation: pulse 2s infinite;
+}
+
+.animate-spin {
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   GLASS MORPHISM (with fallbacks)
+======================================== */
+.glass {
+    background: rgba(30, 41, 59, 0.7);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+    .glass {
+        background: rgba(30, 41, 59, 0.95);
+    }
+}
+
+/* ========================================
+   STATUS COLORS
+======================================== */
+.status-available {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-rented {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-maintenance {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-disabled {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ========================================
+   CARD STYLES
+======================================== */
+.card {
+    @apply bg-dark-800 rounded-2xl border border-dark-700/50 p-4;
+}
+
+.card-interactive {
+    @apply card duration-200;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.card-interactive:active {
+    -webkit-transform: scale(0.98);
+    transform: scale(0.98);
+}
+
+/* ========================================
+   BUTTON STYLES (Touch-friendly min 44px)
+======================================== */
+.btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed;
+    min-height: 48px;
+    min-width: 48px;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.btn:active:not(:disabled) {
+    -webkit-transform: scale(0.97);
+    transform: scale(0.97);
+}
+
+.btn-primary {
+    @apply btn bg-primary-600 text-white;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-primary:active:not(:disabled) {
+    @apply bg-primary-500;
+}
+
+.btn-secondary {
+    @apply btn bg-dark-700 text-dark-100 border border-dark-600;
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-secondary:active:not(:disabled) {
+    @apply bg-dark-600;
+}
+
+.btn-success {
+    @apply btn bg-green-600 text-white;
+}
+
+.btn-success:hover:not(:disabled),
+.btn-success:active:not(:disabled) {
+    @apply bg-green-500;
+}
+
+.btn-danger {
+    @apply btn bg-red-600 text-white;
+}
+
+.btn-danger:hover:not(:disabled),
+.btn-danger:active:not(:disabled) {
+    @apply bg-red-500;
+}
+
+/* ========================================
+   INPUT STYLES
+======================================== */
+.input {
+    @apply w-full px-4 py-3 rounded-xl bg-dark-700/50 border border-dark-600 text-dark-100 placeholder-dark-400;
+    min-height: 48px;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.input:focus {
+    @apply outline-none ring-2 ring-primary-500/50 border-primary-500;
+}
+
+.input-label {
+    @apply block text-sm font-medium text-dark-300 mb-2;
+}
+
+/* ========================================
+   BOTTOM NAVIGATION (Fixed, safe area aware)
+======================================== */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(51, 65, 85, 0.5);
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav-item {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 12px;
+    color: #94a3b8;
+    min-height: 48px;
+    -webkit-transition: color 0.2s ease;
+    transition: color 0.2s ease;
+}
+
+.bottom-nav-item.active {
+    color: #38bdf8;
+}
+
+/* ========================================
+   LOADING SKELETON
+======================================== */
+.skeleton {
+    @apply bg-dark-700 rounded-lg;
+    -webkit-animation: pulse 2s infinite;
+    animation: pulse 2s infinite;
+}
+
+/* ========================================
+   BADGE
+======================================== */
+.badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+}
+
+/* ========================================
+   SYNC INDICATOR
+======================================== */
+.sync-indicator {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 50;
+    padding: 8px 12px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 500;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    gap: 8px;
+    -webkit-animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.sync-indicator.syncing {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.sync-indicator.offline {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sync-indicator.synced {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+======================================== */
+
+/* Small phones (< 360px) */
+@media screen and (max-width: 359px) {
+    .btn {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .input {
+        padding: 10px 12px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+}
+
+/* Tablets and iPads (768px+) */
+@media screen and (min-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .input {
+        padding: 14px 18px;
+    }
+}
+
+/* Large tablets and landscape mode */
+@media screen and (min-width: 1024px) {
+    .bottom-nav {
+        max-width: 480px;
+        left: 50%;
+        -webkit-transform: translateX(-50%);
+        transform: translateX(-50%);
+        border-radius: 24px 24px 0 0;
+    }
+}
+
+/* ========================================
+   DARK MODE SPECIFIC (for system preference)
+======================================== */
+@media (prefers-color-scheme: dark) {
+    /* Already dark theme, no changes needed */
+}
+
+/* ========================================
+   REDUCED MOTION (Accessibility)
+======================================== */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        -webkit-animation-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        -webkit-animation-iteration-count: 1 !important;
+        animation-iteration-count: 1 !important;
+        -webkit-transition-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ========================================
+   HIGH CONTRAST MODE (Accessibility)
+======================================== */
+@media (prefers-contrast: high) {
+    .card {
+        border-width: 2px;
+    }
+
+    .input {
+        border-width: 2px;
+    }
+
+    .btn {
+        border: 2px solid currentColor;
+    }
+}
+
+/* ========================================
+   ORIENTATION CHANGES
+======================================== */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+
+    /* Compact mode for landscape on phones */
+    .bottom-nav {
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    .bottom-nav-item {
+        padding: 4px 12px;
+        min-height: 40px;
+    }
+}
+
+/* ========================================
+   PRINT STYLES
+======================================== */
+@media print {
+
+    .bottom-nav,
+    .sync-indicator {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+}
