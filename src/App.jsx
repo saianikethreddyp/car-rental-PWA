@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { BottomNav } from './components/BottomNav'
+import { InstallBanner } from './components/InstallPrompt'
 
 // Pages
 import Login from './pages/Login'
@@ -38,10 +39,11 @@ function ProtectedRoute({ children }) {
     return children
 }
 
-// Main layout with bottom nav
+// Main layout with bottom nav and install banner
 function AppLayout({ children }) {
     return (
         <div className="min-h-screen flex flex-col bg-dark-900">
+            <InstallBanner />
             {children}
             <BottomNav />
         </div>

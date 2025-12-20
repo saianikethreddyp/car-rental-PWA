@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useSync } from '../context/SyncContext'
 import { supabase } from '../supabaseClient'
 import { Header } from '../components/Header'
+import { InstallButton } from '../components/InstallPrompt'
 import {
     User,
     Moon,
@@ -15,7 +16,6 @@ import {
     WifiOff,
     RefreshCw,
     LogOut,
-    ChevronRight,
     Smartphone
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -28,7 +28,6 @@ export default function Settings() {
 
     const handleThemeChange = (newTheme) => {
         setTheme(newTheme)
-        // In a real app, you'd save this to localStorage or context
         toast.success(`Theme set to ${newTheme}`)
     }
 
@@ -173,6 +172,12 @@ export default function Settings() {
                     </div>
                 </div>
 
+                {/* Install App */}
+                <div className="card p-4">
+                    <h3 className="text-xs font-medium text-dark-400 mb-3">Install App</h3>
+                    <InstallButton />
+                </div>
+
                 {/* Sync Status */}
                 <div className="card p-4">
                     <h3 className="text-xs font-medium text-dark-400 mb-3">Sync Status</h3>
@@ -233,8 +238,8 @@ export default function Settings() {
                         <button
                             onClick={() => handleThemeChange('dark')}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${theme === 'dark'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'bg-dark-700/50 text-dark-300'
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-dark-700/50 text-dark-300'
                                 }`}
                         >
                             <Moon className="w-4 h-4" />
@@ -243,8 +248,8 @@ export default function Settings() {
                         <button
                             onClick={() => handleThemeChange('light')}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all ${theme === 'light'
-                                    ? 'bg-primary-600 text-white'
-                                    : 'bg-dark-700/50 text-dark-300'
+                                ? 'bg-primary-600 text-white'
+                                : 'bg-dark-700/50 text-dark-300'
                                 }`}
                         >
                             <Sun className="w-4 h-4" />
@@ -316,7 +321,7 @@ export default function Settings() {
                             <span className="text-dark-300">1.0.0</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-dark-400">PWA</span>
+                            <span className="text-dark-400">PWA Status</span>
                             <span className="text-dark-300">
                                 {window.matchMedia('(display-mode: standalone)').matches ? 'Installed' : 'Browser'}
                             </span>
