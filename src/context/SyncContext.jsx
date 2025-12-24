@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { supabase } from '../supabaseClient'
+import { carsApi, rentalsApi } from '../api/client'
 import { offlineStorage, syncQueue } from '../utils/offlineStorage'
 import toast from 'react-hot-toast'
 
@@ -85,29 +85,29 @@ export function SyncProvider({ children }) {
     const executeAction = async (item) => {
         const { action, table, data } = item
 
+        // Map table names to API functions
+        const apiMap = {
+            cars: carsApi,
+            rentals: rentalsApi
+        }
+
+        const api = apiMap[table]
+        if (!api) {
+            throw new Error(`Unknown table: ${table}`)
+        }
+
         switch (action) {
             case 'INSERT':
-                const { error: insertError } = await supabase
-                    .from(table)
-                    .insert(data)
-                if (insertError) throw insertError
+                await api.create(data)
                 break
 
             case 'UPDATE':
                 const { id: updateId, ...updateData } = data
-                const { error: updateError } = await supabase
-                    .from(table)
-                    .update(updateData)
-                    .eq('id', updateId)
-                if (updateError) throw updateError
+                await api.update(updateId, updateData)
                 break
 
             case 'DELETE':
-                const { error: deleteError } = await supabase
-                    .from(table)
-                    .delete()
-                    .eq('id', data.id)
-                if (deleteError) throw deleteError
+                await api.delete(data.id)
                 break
 
             default:

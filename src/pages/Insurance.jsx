@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useCars } from '../hooks/useData'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { Modal } from '../components/Modal'
 import {
@@ -92,12 +92,7 @@ export default function Insurance() {
 
         setSaving(true)
         try {
-            const { error } = await supabase
-                .from('cars')
-                .update(formData)
-                .eq('id', selectedCar.id)
-
-            if (error) throw error
+            await carsApi.update(selectedCar.id, formData)
 
             toast.success('Insurance updated!')
             setShowEdit(false)

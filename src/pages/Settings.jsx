@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { rentalsApi, carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { InstallButton } from '../components/InstallPrompt'
 import {
@@ -52,12 +52,7 @@ export default function Settings() {
             let filename = ''
 
             if (type === 'rentals') {
-                const { data: rentals, error } = await supabase
-                    .from('rentals')
-                    .select('*, cars(make, model, license_plate)')
-                    .order('created_at', { ascending: false })
-
-                if (error) throw error
+                const rentals = await rentalsApi.getAll()
 
                 data = rentals.map(r => ({
                     'Customer Name': r.customer_name,
@@ -73,12 +68,7 @@ export default function Settings() {
                 }))
                 filename = 'rentals_export.csv'
             } else if (type === 'cars') {
-                const { data: cars, error } = await supabase
-                    .from('cars')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-
-                if (error) throw error
+                const cars = await carsApi.getAll()
 
                 data = cars.map(c => ({
                     'Make': c.make,
@@ -92,11 +82,7 @@ export default function Settings() {
                 }))
                 filename = 'fleet_export.csv'
             } else if (type === 'customers') {
-                const { data: rentals, error } = await supabase
-                    .from('rentals')
-                    .select('customer_name, customer_phone, total_amount, status')
-
-                if (error) throw error
+                const rentals = await rentalsApi.getAll()
 
                 const customerMap = new Map()
                 rentals.forEach(r => {

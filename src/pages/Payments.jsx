@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { usePayments } from '../hooks/useData'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { rentalsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { Modal } from '../components/Modal'
 import {
@@ -73,15 +73,10 @@ export default function Payments() {
                 newStatus = 'partial'
             }
 
-            const { error } = await supabase
-                .from('rentals')
-                .update({
-                    amount_paid: paid,
-                    payment_status: newStatus
-                })
-                .eq('id', selectedPayment.id)
-
-            if (error) throw error
+            await rentalsApi.update(selectedPayment.id, {
+                amount_paid: paid,
+                payment_status: newStatus
+            })
 
             toast.success('Payment updated!')
             setShowEdit(false)
@@ -299,8 +294,8 @@ export default function Payments() {
                             <div className="flex justify-between mt-2 text-sm">
                                 <span className="text-dark-400">Balance</span>
                                 <span className={`font-medium ${(selectedPayment.total_amount || 0) - (parseFloat(amountPaid) || 0) <= 0
-                                        ? 'text-green-400'
-                                        : 'text-yellow-400'
+                                    ? 'text-green-400'
+                                    : 'text-yellow-400'
                                     }`}>
                                     ₹{Math.max(0, (selectedPayment.total_amount || 0) - (parseFloat(amountPaid) || 0)).toLocaleString()}
                                 </span>

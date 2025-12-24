@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRentals } from '../hooks/useData'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { rentalsApi, carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { Modal, ConfirmModal } from '../components/Modal'
 import {
@@ -81,21 +81,11 @@ export default function Rentals() {
             const newStatus = confirmAction === 'complete' ? 'completed' : 'cancelled'
 
             // Update rental status
-            const { error: rentalError } = await supabase
-                .from('rentals')
-                .update({ status: newStatus })
-                .eq('id', selectedRental.id)
-
-            if (rentalError) throw rentalError
+            await rentalsApi.update(selectedRental.id, { status: newStatus })
 
             // If completing/cancelling, make car available again
             if (selectedRental.car_id) {
-                const { error: carError } = await supabase
-                    .from('cars')
-                    .update({ status: 'available' })
-                    .eq('id', selectedRental.car_id)
-
-                if (carError) throw carError
+                await carsApi.update(selectedRental.car_id, { status: 'available' })
             }
 
             toast.success(`Rental ${newStatus}!`)

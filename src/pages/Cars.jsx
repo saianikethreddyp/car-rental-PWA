@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCars } from '../hooks/useData'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { CarCard, CarCardSkeleton } from '../components/CarCard'
-import { Search, Plus, X, Car } from 'lucide-react'
+import { Search, Plus, X, Car, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const statusFilters = [
@@ -49,12 +49,7 @@ export default function Cars() {
 
         try {
             if (isOnline) {
-                const { error } = await supabase
-                    .from('cars')
-                    .update({ status: newStatus })
-                    .eq('id', selectedCar.id)
-
-                if (error) throw error
+                await carsApi.update(selectedCar.id, { status: newStatus })
             } else {
                 await queueAction('UPDATE', 'cars', {
                     id: selectedCar.id,
@@ -74,35 +69,35 @@ export default function Cars() {
     }
 
     return (
-        <div className="flex-1 flex flex-col pb-20">
+        <div className="flex-1 flex flex-col pb-safe-pb">
             <Header
-                title="Cars"
+                title="Inventory"
                 rightAction={
                     <button
                         onClick={() => navigate('/add-car')}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-primary-600 active:scale-95 transition-all"
+                        className="w-10 h-10 flex items-center justify-center rounded-full bg-black active:scale-95 transition-all text-white shadow-md hover:bg-neutral-800"
                     >
-                        <Plus className="w-5 h-5 text-white" />
+                        <Plus className="w-5 h-5" />
                     </button>
                 }
             />
 
             <main className="flex-1 flex flex-col">
-                {/* Search */}
-                <div className="px-4 py-3 border-b border-dark-700/50">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
+                {/* Search & Filter Header */}
+                <div className="px-4 py-3 bg-white sticky top-0 z-10 border-b border-neutral-100">
+                    <div className="relative mb-3">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                         <input
                             type="text"
                             placeholder="Search cars..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="input pl-10"
+                            className="w-full bg-neutral-100 border-none rounded-xl py-3 pl-11 pr-10 text-base placeholder:text-neutral-400 focus:ring-0 text-black"
                         />
                         {search && (
                             <button
                                 onClick={() => setSearch('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-dark-400 hover:text-dark-300"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-black rounded-full hover:bg-neutral-200 transition-colors"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -110,18 +105,18 @@ export default function Cars() {
                     </div>
 
                     {/* Filter tabs */}
-                    <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-4 px-4">
+                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                         {statusFilters.map(filter => (
                             <button
                                 key={filter.value}
                                 onClick={() => setActiveFilter(filter.value)}
                                 className={`
-                  px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
-                  ${activeFilter === filter.value
-                                        ? 'bg-primary-600 text-white'
-                                        : 'bg-dark-700/50 text-dark-300 hover:bg-dark-700'
+                                    px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all
+                                    ${activeFilter === filter.value
+                                        ? 'bg-black text-white shadow-md'
+                                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                                     }
-                `}
+                                `}
                             >
                                 {filter.label}
                             </button>
@@ -130,7 +125,7 @@ export default function Cars() {
                 </div>
 
                 {/* Cars list */}
-                <div className="flex-1 overflow-auto px-4 py-4">
+                <div className="flex-1 overflow-auto px-4 py-4 pb-24">
                     {loading ? (
                         <div className="space-y-3">
                             <CarCardSkeleton />
@@ -138,12 +133,15 @@ export default function Cars() {
                             <CarCardSkeleton />
                         </div>
                     ) : filteredCars.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <Car className="w-16 h-16 text-dark-600 mb-4" />
-                            <p className="text-dark-400 text-center">
+                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+                                <Car className="w-8 h-8 text-neutral-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-black">No cars found</h3>
+                            <p className="text-neutral-500 mt-1 max-w-xs mx-auto">
                                 {search || activeFilter !== 'all'
-                                    ? 'No cars match your filters'
-                                    : 'No cars found'
+                                    ? 'Try adjusting your search or filters'
+                                    : 'Add a new car to get started'
                                 }
                             </p>
                         </div>
@@ -163,60 +161,60 @@ export default function Cars() {
 
             {/* Status Update Modal */}
             {showStatusModal && selectedCar && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-lg bg-dark-800 rounded-t-3xl p-6 animate-slide-up safe-area-bottom">
+                <div className="fixed inset-0 z-50 flex items-end justify-center">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+                        onClick={() => setShowStatusModal(false)}
+                    />
+                    <div className="relative w-full max-w-lg bg-white rounded-t-3xl p-6 shadow-2xl animate-slide-up safe-area-bottom">
+                        <div className="w-12 h-1.5 bg-neutral-200 rounded-full mx-auto mb-6" />
+
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-semibold text-dark-100">
-                                Update Status
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setShowStatusModal(false)
-                                    setSelectedCar(null)
-                                }}
-                                className="p-2 rounded-full hover:bg-dark-700/50"
-                            >
-                                <X className="w-5 h-5 text-dark-400" />
-                            </button>
+                            <div>
+                                <h2 className="text-xl font-bold text-black">
+                                    Update Status
+                                </h2>
+                                <p className="text-neutral-500">
+                                    {selectedCar.make} {selectedCar.model} • {selectedCar.license_plate}
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="mb-6">
-                            <p className="text-dark-300">
-                                {selectedCar.make} {selectedCar.model}
-                            </p>
-                            <p className="text-sm text-dark-500">
-                                {selectedCar.license_plate}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-3">
                             <button
                                 onClick={() => handleStatusUpdate('available')}
-                                disabled={updating || selectedCar.status === 'available'}
-                                className="btn bg-green-600/20 text-green-400 border border-green-600/30 hover:bg-green-600/30 disabled:opacity-50"
+                                disabled={updating}
+                                className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${selectedCar.status === 'available' ? 'border-green-500 bg-green-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
                             >
-                                Available
+                                <span className={`font-semibold ${selectedCar.status === 'available' ? 'text-green-700' : 'text-neutral-700'}`}>Available</span>
+                                {selectedCar.status === 'available' && <Check className="w-5 h-5 text-green-600" />}
                             </button>
+
                             <button
                                 onClick={() => handleStatusUpdate('rented')}
-                                disabled={updating || selectedCar.status === 'rented'}
-                                className="btn bg-blue-600/20 text-blue-400 border border-blue-600/30 hover:bg-blue-600/30 disabled:opacity-50"
+                                disabled={updating}
+                                className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${selectedCar.status === 'rented' ? 'border-black bg-neutral-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
                             >
-                                Rented
+                                <span className={`font-semibold ${selectedCar.status === 'rented' ? 'text-black' : 'text-neutral-700'}`}>Rented</span>
+                                {selectedCar.status === 'rented' && <Check className="w-5 h-5 text-black" />}
                             </button>
+
                             <button
                                 onClick={() => handleStatusUpdate('maintenance')}
-                                disabled={updating || selectedCar.status === 'maintenance'}
-                                className="btn bg-yellow-600/20 text-yellow-400 border border-yellow-600/30 hover:bg-yellow-600/30 disabled:opacity-50"
+                                disabled={updating}
+                                className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${selectedCar.status === 'maintenance' ? 'border-amber-500 bg-amber-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
                             >
-                                Maintenance
+                                <span className={`font-semibold ${selectedCar.status === 'maintenance' ? 'text-amber-700' : 'text-neutral-700'}`}>Maintenance</span>
+                                {selectedCar.status === 'maintenance' && <Check className="w-5 h-5 text-amber-600" />}
                             </button>
+
                             <button
                                 onClick={() => handleStatusUpdate('disabled')}
-                                disabled={updating || selectedCar.status === 'disabled'}
-                                className="btn bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 disabled:opacity-50"
+                                disabled={updating}
+                                className={`w-full p-4 rounded-xl border-2 flex items-center justify-between transition-all ${selectedCar.status === 'disabled' ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-100 hover:bg-neutral-50'}`}
                             >
-                                Disabled
+                                <span className={`font-semibold ${selectedCar.status === 'disabled' ? 'text-neutral-700' : 'text-neutral-700'}`}>Disabled</span>
+                                {selectedCar.status === 'disabled' && <Check className="w-5 h-5 text-neutral-500" />}
                             </button>
                         </div>
                     </div>

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../supabaseClient'
+import { carsApi, rentalsApi } from '../api/client'
 import { offlineStorage } from '../utils/offlineStorage'
 import { useSync } from '../context/SyncContext'
 
-// Hook for fetching cars with realtime updates
+// Hook for fetching cars with API
 export function useCars() {
     const [cars, setCars] = useState([])
     const [loading, setLoading] = useState(true)
@@ -22,13 +22,7 @@ export function useCars() {
                 }
             }
 
-            const { data, error } = await supabase
-                .from('cars')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
-
+            const data = await carsApi.getAll()
             setCars(data || [])
             await cacheData('cars', data)
         } catch (err) {
@@ -45,29 +39,7 @@ export function useCars() {
 
     useEffect(() => {
         fetchCars()
-
-        // Set up realtime subscription
-        const channel = supabase
-            .channel('cars-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'cars' },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        setCars(prev => [payload.new, ...prev])
-                    } else if (payload.eventType === 'UPDATE') {
-                        setCars(prev => prev.map(car =>
-                            car.id === payload.new.id ? payload.new : car
-                        ))
-                    } else if (payload.eventType === 'DELETE') {
-                        setCars(prev => prev.filter(car => car.id !== payload.old.id))
-                    }
-                }
-            )
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
-        }
+        // Note: Realtime subscriptions removed - using polling or manual refresh instead
     }, [fetchCars])
 
     // Get available cars only
@@ -82,7 +54,7 @@ export function useCars() {
     }
 }
 
-// Hook for fetching rentals with realtime updates
+// Hook for fetching rentals with API
 export function useRentals(options = {}) {
     const { todayOnly = false } = options
     const [rentals, setRentals] = useState([])
@@ -102,24 +74,9 @@ export function useRentals(options = {}) {
                 }
             }
 
-            let query = supabase
-                .from('rentals')
-                .select(`
-          *,
-          cars (id, make, model, license_plate)
-        `)
-                .order('created_at', { ascending: false })
-
-            if (todayOnly) {
-                const today = new Date().toISOString().split('T')[0]
-                query = query.or(`start_date.eq.${today},end_date.eq.${today}`)
-            }
-
-            const { data, error } = await query
-
-            if (error) throw error
-
-            setRentals(data || [])
+            const data = await rentalsApi.getAll()
+            const filteredData = filterRentals(data || [])
+            setRentals(filteredData)
             await cacheData('rentals', data)
         } catch (err) {
             setError(err.message)
@@ -140,29 +97,6 @@ export function useRentals(options = {}) {
 
     useEffect(() => {
         fetchRentals()
-
-        // Set up realtime subscription
-        const channel = supabase
-            .channel('rentals-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'rentals' },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        setRentals(prev => [payload.new, ...prev])
-                    } else if (payload.eventType === 'UPDATE') {
-                        setRentals(prev => prev.map(rental =>
-                            rental.id === payload.new.id ? payload.new : rental
-                        ))
-                    } else if (payload.eventType === 'DELETE') {
-                        setRentals(prev => prev.filter(rental => rental.id !== payload.old.id))
-                    }
-                }
-            )
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
-        }
     }, [fetchRentals])
 
     // Categorize rentals
@@ -210,7 +144,7 @@ export function useTodaySchedule() {
     }
 }
 
-// Hook for customers
+// Hook for customers (derived from rentals)
 export function useCustomers() {
     const [customers, setCustomers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -229,13 +163,8 @@ export function useCustomers() {
                 }
             }
 
-            // Get unique customers from rentals with their stats
-            const { data, error } = await supabase
-                .from('rentals')
-                .select('customer_name, customer_phone, total_amount, status, created_at')
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
+            // Get rentals and derive customers from them
+            const data = await rentalsApi.getAll()
 
             // Aggregate customer data
             const customerMap = new Map()
@@ -310,41 +239,32 @@ export function useDashboardStats() {
                 }
             }
 
-            // Fetch available cars count
-            const { count: availableCars } = await supabase
-                .from('cars')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'available')
+            // Fetch cars and rentals from API
+            const [carsData, rentalsData] = await Promise.all([
+                carsApi.getAll(),
+                rentalsApi.getAll()
+            ])
 
-            // Fetch active rentals count
-            const { count: activeRentals } = await supabase
-                .from('rentals')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'active')
+            // Calculate stats from data
+            const availableCars = carsData?.filter(c => c.status === 'available').length || 0
+            const activeRentals = rentalsData?.filter(r => r.status === 'active').length || 0
 
-            // Fetch monthly revenue
+            // Calculate monthly revenue
             const startOfMonth = new Date()
             startOfMonth.setDate(1)
             startOfMonth.setHours(0, 0, 0, 0)
 
-            const { data: monthlyRentals } = await supabase
-                .from('rentals')
-                .select('total_amount')
-                .gte('created_at', startOfMonth.toISOString())
+            const monthlyRevenue = rentalsData?.filter(r =>
+                new Date(r.created_at) >= startOfMonth
+            ).reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
 
-            const monthlyRevenue = monthlyRentals?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0
-
-            // Fetch unique customers count
-            const { data: allRentals } = await supabase
-                .from('rentals')
-                .select('customer_phone')
-
-            const uniqueCustomers = new Set(allRentals?.map(r => r.customer_phone))
+            // Unique customers
+            const uniqueCustomers = new Set(rentalsData?.map(r => r.customer_phone))
             const totalCustomers = uniqueCustomers.size
 
             const newStats = {
-                availableCars: availableCars || 0,
-                activeRentals: activeRentals || 0,
+                availableCars,
+                activeRentals,
                 monthlyRevenue,
                 totalCustomers
             }
@@ -398,15 +318,7 @@ export function usePayments() {
                 }
             }
 
-            const { data, error } = await supabase
-                .from('rentals')
-                .select(`
-                    *,
-                    cars (id, make, model, license_plate)
-                `)
-                .order('created_at', { ascending: false })
-
-            if (error) throw error
+            const data = await rentalsApi.getAll()
 
             // Calculate stats
             let totalBilled = 0
@@ -452,4 +364,3 @@ export function usePayments() {
         refetch: fetchPayments
     }
 }
-

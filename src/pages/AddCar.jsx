@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import {
     Car,
@@ -60,16 +60,7 @@ export default function AddCar() {
 
         try {
             if (isOnline) {
-                const { error } = await supabase
-                    .from('cars')
-                    .insert(carData)
-
-                if (error) {
-                    if (error.code === '23505') {
-                        throw new Error('A car with this license plate already exists')
-                    }
-                    throw error
-                }
+                await carsApi.create(carData)
             } else {
                 await queueAction('INSERT', 'cars', carData)
             }
@@ -77,7 +68,12 @@ export default function AddCar() {
             toast.success('Car added successfully!')
             navigate('/cars')
         } catch (error) {
-            toast.error(error.message || 'Failed to add car')
+            const message = error.response?.data?.error || error.message || 'Failed to add car'
+            if (message.includes('duplicate') || message.includes('23505')) {
+                toast.error('A car with this license plate already exists')
+            } else {
+                toast.error(message)
+            }
         } finally {
             setSubmitting(false)
         }

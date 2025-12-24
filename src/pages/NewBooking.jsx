@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCars } from '../hooks/useData'
 import { useSync } from '../context/SyncContext'
-import { supabase } from '../supabaseClient'
+import { rentalsApi, carsApi } from '../api/client'
 import { Header } from '../components/Header'
 import { CarCard } from '../components/CarCard'
 import { DocumentUpload } from '../components/DocumentUpload'
@@ -19,7 +19,8 @@ import {
     ChevronUp,
     Check,
     IdCard,
-    CreditCard
+    CreditCard,
+    ArrowLeft
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -131,19 +132,10 @@ export default function NewBooking() {
         try {
             if (isOnline) {
                 // Create rental
-                const { error: rentalError } = await supabase
-                    .from('rentals')
-                    .insert(bookingData)
-
-                if (rentalError) throw rentalError
+                await rentalsApi.create(bookingData)
 
                 // Update car status
-                const { error: carError } = await supabase
-                    .from('cars')
-                    .update({ status: 'rented' })
-                    .eq('id', formData.car_id)
-
-                if (carError) throw carError
+                await carsApi.update(formData.car_id, { status: 'rented' })
             } else {
                 // Queue for offline sync
                 await queueAction('INSERT', 'rentals', bookingData)
@@ -156,7 +148,7 @@ export default function NewBooking() {
             toast.success('Booking created successfully!')
             navigate('/')
         } catch (error) {
-            toast.error(error.message || 'Failed to create booking')
+            toast.error(error.response?.data?.error || error.message || 'Failed to create booking')
         } finally {
             setSubmitting(false)
         }
@@ -165,168 +157,135 @@ export default function NewBooking() {
     // Check if any documents are uploaded
     const hasDocuments = formData.pan_image_url || formData.aadhar_image_url || formData.license_image_url
 
+    const stepTitles = ['Who is booking?', 'Choose a car', 'Trip Details', 'Confirm']
+
     return (
-        <div className="flex-1 flex flex-col pb-20">
+        <div className="flex-1 flex flex-col pb-safe-pb bg-white h-full relative">
             <Header
-                title="New Booking"
+                title={step === 1 ? "New Booking" : stepTitles[step - 1]}
                 showBack
                 onBack={handleBack}
             />
 
-            <main className="flex-1 flex flex-col">
-                {/* Progress indicator */}
-                <div className="px-4 py-3 border-b border-dark-700/50">
-                    <div className="flex items-center justify-between">
+            <main className="flex-1 flex flex-col overflow-hidden">
+                {/* Progress Bar - minimalist */}
+                <div className="px-6 py-2">
+                    <div className="flex gap-2">
                         {[1, 2, 3, 4].map((s) => (
-                            <div key={s} className="flex items-center">
-                                <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                  ${s < step
-                                        ? 'bg-primary-600 text-white'
-                                        : s === step
-                                            ? 'bg-primary-600/20 text-primary-400 border-2 border-primary-600'
-                                            : 'bg-dark-700 text-dark-400'
-                                    }
-                `}>
-                                    {s < step ? <Check className="w-4 h-4" /> : s}
-                                </div>
-                                {s < 4 && (
-                                    <div className={`w-12 h-0.5 mx-1 ${s < step ? 'bg-primary-600' : 'bg-dark-700'}`} />
-                                )}
-                            </div>
+                            <div
+                                key={s}
+                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${s <= step ? 'bg-black' : 'bg-neutral-200'}`}
+                            />
                         ))}
-                    </div>
-                    <div className="flex justify-between mt-2 text-xs text-dark-400">
-                        <span>Customer</span>
-                        <span>Car</span>
-                        <span>Details</span>
-                        <span>Confirm</span>
                     </div>
                 </div>
 
                 {/* Step content */}
-                <div className="flex-1 overflow-auto px-4 py-4">
+                <div className="flex-1 overflow-auto px-6 py-4 pb-24">
                     {/* Step 1: Customer Info */}
                     {step === 1 && (
-                        <div className="space-y-4 animate-fade-in">
-                            <h2 className="text-lg font-semibold text-dark-100 mb-4">
-                                Customer Information
-                            </h2>
-
+                        <div className="space-y-6 animate-fade-in">
                             <div>
-                                <label className="input-label flex items-center gap-2">
-                                    <User className="w-4 h-4" />
-                                    Customer Name
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input"
-                                    placeholder="Enter customer name"
-                                    value={formData.customer_name}
-                                    onChange={(e) => updateForm('customer_name', e.target.value)}
-                                    autoFocus
-                                />
+                                <h1 className="text-3xl font-bold text-black mb-2">Customer Details</h1>
+                                <p className="text-neutral-500">Who is renting the car?</p>
                             </div>
 
-                            <div>
-                                <label className="input-label flex items-center gap-2">
-                                    <Phone className="w-4 h-4" />
-                                    Phone Number
-                                </label>
-                                <input
-                                    type="tel"
-                                    className="input"
-                                    placeholder="Enter phone number"
-                                    value={formData.customer_phone}
-                                    onChange={(e) => updateForm('customer_phone', e.target.value)}
-                                />
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <label className="text-sm font-semibold text-neutral-900 ml-1">Full Name</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-neutral-100 border-none rounded-xl p-4 text-lg font-medium placeholder:text-neutral-400 focus:ring-2 focus:ring-black/5 transition-all text-black"
+                                        placeholder="Enter name"
+                                        value={formData.customer_name}
+                                        onChange={(e) => updateForm('customer_name', e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-sm font-semibold text-neutral-900 ml-1">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        className="w-full bg-neutral-100 border-none rounded-xl p-4 text-lg font-medium placeholder:text-neutral-400 focus:ring-2 focus:ring-black/5 transition-all text-black"
+                                        placeholder="10-digit number"
+                                        value={formData.customer_phone}
+                                        onChange={(e) => updateForm('customer_phone', e.target.value)}
+                                    />
+                                </div>
                             </div>
 
-                            {/* Identity Documents Section */}
-                            <div className="border border-dark-600 rounded-xl overflow-hidden mt-6">
+                            {/* Identity Documents Toggle */}
+                            <div className="pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowDocuments(!showDocuments)}
-                                    className="w-full flex items-center justify-between p-4 bg-dark-800/50 active:bg-dark-700 transition-colors text-left"
+                                    className="flex items-center gap-2 text-sm font-semibold text-neutral-500 hover:text-black transition-colors"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-primary-600/20 flex items-center justify-center">
-                                            <IdCard className="w-5 h-5 text-primary-400" />
-                                        </div>
-                                        <div>
-                                            <span className="font-medium text-dark-100">Identity Documents</span>
-                                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-dark-600 text-dark-400">Optional</span>
-                                            {hasDocuments && (
-                                                <p className="text-xs text-green-400 mt-0.5">Documents attached</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {showDocuments ? <ChevronUp className="w-5 h-5 text-dark-400" /> : <ChevronDown className="w-5 h-5 text-dark-400" />}
+                                    {showDocuments ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    {showDocuments ? 'Hide Documents' : 'Add Documents (Optional)'}
                                 </button>
 
                                 {showDocuments && (
-                                    <div className="p-4 space-y-5 bg-dark-800/30">
-                                        {/* PAN Card */}
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-dark-200">
-                                                <CreditCard className="w-4 h-4 text-primary-400" />
-                                                PAN Card
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="input uppercase"
-                                                placeholder="ABCDE1234F"
-                                                value={formData.pan_number}
-                                                onChange={(e) => updateForm('pan_number', e.target.value)}
-                                            />
-                                            <DocumentUpload
-                                                label="PAN Card Photo"
-                                                docType="pan"
-                                                existingUrl={formData.pan_image_url}
-                                                onUpload={(url) => updateForm('pan_image_url', url)}
-                                            />
-                                        </div>
+                                    <div className="mt-4 space-y-6 animate-slide-down">
+                                        <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
+                                            <h3 className="font-semibold text-black mb-3 text-sm uppercase tracking-wide">Identity Proofs</h3>
 
-                                        {/* Aadhar Card */}
-                                        <div className="space-y-3 pt-3 border-t border-dark-600">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-dark-200">
-                                                <IdCard className="w-4 h-4 text-blue-400" />
-                                                Aadhar Card
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="input"
-                                                placeholder="1234 5678 9012"
-                                                value={formData.aadhar_number}
-                                                onChange={(e) => updateForm('aadhar_number', e.target.value)}
-                                            />
-                                            <DocumentUpload
-                                                label="Aadhar Card Photo"
-                                                docType="aadhar"
-                                                existingUrl={formData.aadhar_image_url}
-                                                onUpload={(url) => updateForm('aadhar_image_url', url)}
-                                            />
-                                        </div>
+                                            <div className="space-y-5">
+                                                {/* PAN */}
+                                                <div>
+                                                    <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">PAN Card</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-white border border-neutral-200 rounded-lg p-3 text-sm font-medium uppercase mb-2 placeholder:normal-case"
+                                                        placeholder="PAN Number"
+                                                        value={formData.pan_number}
+                                                        onChange={(e) => updateForm('pan_number', e.target.value)}
+                                                    />
+                                                    <DocumentUpload
+                                                        label="Upload Photo"
+                                                        docType="pan"
+                                                        existingUrl={formData.pan_image_url}
+                                                        onUpload={(url) => updateForm('pan_image_url', url)}
+                                                    />
+                                                </div>
 
-                                        {/* Driving License */}
-                                        <div className="space-y-3 pt-3 border-t border-dark-600">
-                                            <div className="flex items-center gap-2 text-sm font-medium text-dark-200">
-                                                <Car className="w-4 h-4 text-green-400" />
-                                                Driving License
+                                                {/* Aadhar */}
+                                                <div className="border-t border-neutral-100 pt-4">
+                                                    <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Aadhar Card</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-white border border-neutral-200 rounded-lg p-3 text-sm font-medium mb-2"
+                                                        placeholder="Aadhar Number"
+                                                        value={formData.aadhar_number}
+                                                        onChange={(e) => updateForm('aadhar_number', e.target.value)}
+                                                    />
+                                                    <DocumentUpload
+                                                        label="Upload Photo"
+                                                        docType="aadhar"
+                                                        existingUrl={formData.aadhar_image_url}
+                                                        onUpload={(url) => updateForm('aadhar_image_url', url)}
+                                                    />
+                                                </div>
+
+                                                {/* License */}
+                                                <div className="border-t border-neutral-100 pt-4">
+                                                    <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Driving License</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full bg-white border border-neutral-200 rounded-lg p-3 text-sm font-medium uppercase mb-2 placeholder:normal-case"
+                                                        placeholder="License Number"
+                                                        value={formData.license_number}
+                                                        onChange={(e) => updateForm('license_number', e.target.value)}
+                                                    />
+                                                    <DocumentUpload
+                                                        label="Upload Photo"
+                                                        docType="license"
+                                                        existingUrl={formData.license_image_url}
+                                                        onUpload={(url) => updateForm('license_image_url', url)}
+                                                    />
+                                                </div>
                                             </div>
-                                            <input
-                                                type="text"
-                                                className="input uppercase"
-                                                placeholder="TS0120200012345"
-                                                value={formData.license_number}
-                                                onChange={(e) => updateForm('license_number', e.target.value)}
-                                            />
-                                            <DocumentUpload
-                                                label="License Photo"
-                                                docType="license"
-                                                existingUrl={formData.license_image_url}
-                                                onUpload={(url) => updateForm('license_image_url', url)}
-                                            />
                                         </div>
                                     </div>
                                 )}
@@ -337,30 +296,28 @@ export default function NewBooking() {
                     {/* Step 2: Select Car */}
                     {step === 2 && (
                         <div className="animate-fade-in">
-                            <h2 className="text-lg font-semibold text-dark-100 mb-4">
-                                Select Vehicle
-                            </h2>
+                            <h2 className="text-2xl font-bold text-black mb-6">Select a Car</h2>
 
                             {carsLoading ? (
                                 <div className="space-y-3">
-                                    <div className="h-24 skeleton rounded-xl" />
-                                    <div className="h-24 skeleton rounded-xl" />
+                                    <CarCardSkeleton />
+                                    <CarCardSkeleton />
                                 </div>
                             ) : availableCars.length === 0 ? (
-                                <div className="card p-8 text-center">
-                                    <Car className="w-12 h-12 text-dark-500 mx-auto mb-3" />
-                                    <p className="text-dark-400">No cars available</p>
+                                <div className="text-center py-10">
+                                    <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Car className="w-8 h-8 text-neutral-400" />
+                                    </div>
+                                    <h3 className="font-semibold text-black">No cars available</h3>
+                                    <p className="text-neutral-500 text-sm mt-1">Please mark a car as available first.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     {availableCars.map(car => (
                                         <div
                                             key={car.id}
                                             onClick={() => selectCar(car)}
-                                            className={`
-                        card-interactive p-4 cursor-pointer
-                        ${formData.car_id === car.id ? 'ring-2 ring-primary-500' : ''}
-                      `}
+                                            className={`transition-all active:scale-[0.98] ${formData.car_id === car.id ? 'ring-2 ring-black rounded-2xl' : ''}`}
                                         >
                                             <CarCard car={car} showStatus={false} compact />
                                         </div>
@@ -372,231 +329,212 @@ export default function NewBooking() {
 
                     {/* Step 3: Booking Details */}
                     {step === 3 && (
-                        <div className="space-y-4 animate-fade-in">
-                            <h2 className="text-lg font-semibold text-dark-100 mb-4">
-                                Booking Details
-                            </h2>
-
+                        <div className="space-y-8 animate-fade-in">
                             {/* Selected car summary */}
                             {formData.selectedCar && (
-                                <div className="card p-3 mb-4 bg-primary-600/10 border-primary-600/20">
-                                    <div className="flex items-center gap-3">
-                                        <Car className="w-5 h-5 text-primary-400" />
-                                        <div>
-                                            <p className="font-medium text-dark-100">
-                                                {formData.selectedCar.make} {formData.selectedCar.model}
-                                            </p>
-                                            <p className="text-sm text-dark-400">
-                                                {formData.selectedCar.license_plate} • ₹{formData.selectedCar.daily_rate}/day
-                                            </p>
-                                        </div>
+                                <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                        <Car className="w-6 h-6 text-black" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-black">
+                                            {formData.selectedCar.make} {formData.selectedCar.model}
+                                        </h3>
+                                        <p className="text-sm font-medium text-neutral-500">
+                                            {formData.selectedCar.license_plate}
+                                        </p>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="input-label flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        Start Date
-                                    </label>
-                                    <input
-                                        type="date"
-                                        className="input"
-                                        value={formData.start_date}
-                                        onChange={(e) => updateForm('start_date', e.target.value)}
-                                    />
+                            <div className="space-y-6">
+                                {/* DateTime */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide ml-1">Start</label>
+                                        <input
+                                            type="date"
+                                            className="w-full bg-neutral-100 border-none rounded-xl p-3 font-medium text-black focus:ring-2 focus:ring-black/5"
+                                            value={formData.start_date}
+                                            onChange={(e) => updateForm('start_date', e.target.value)}
+                                        />
+                                        <input
+                                            type="time"
+                                            className="w-full mt-2 bg-neutral-100 border-none rounded-xl p-3 font-medium text-black focus:ring-2 focus:ring-black/5"
+                                            value={formData.start_time}
+                                            onChange={(e) => updateForm('start_time', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide ml-1">End</label>
+                                        <input
+                                            type="date"
+                                            className="w-full bg-neutral-100 border-none rounded-xl p-3 font-medium text-black focus:ring-2 focus:ring-black/5"
+                                            value={formData.end_date}
+                                            min={formData.start_date}
+                                            onChange={(e) => updateForm('end_date', e.target.value)}
+                                        />
+                                        <input
+                                            type="time"
+                                            className="w-full mt-2 bg-neutral-100 border-none rounded-xl p-3 font-medium text-black focus:ring-2 focus:ring-black/5"
+                                            value={formData.end_time}
+                                            onChange={(e) => updateForm('end_time', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="input-label flex items-center gap-2">
-                                        <Clock className="w-4 h-4" />
-                                        Start Time
-                                    </label>
-                                    <input
-                                        type="time"
-                                        className="input"
-                                        value={formData.start_time}
-                                        onChange={(e) => updateForm('start_time', e.target.value)}
-                                    />
+
+                                {/* Locations */}
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide ml-1">Pickup Location</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                            <input
+                                                type="text"
+                                                className="w-full bg-neutral-100 border-none rounded-xl py-3 pl-11 pr-4 font-medium"
+                                                placeholder="Enter location"
+                                                value={formData.from_location}
+                                                onChange={(e) => updateForm('from_location', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide ml-1">Drop Location</label>
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                                            <input
+                                                type="text"
+                                                className="w-full bg-neutral-100 border-none rounded-xl py-3 pl-11 pr-4 font-medium"
+                                                placeholder="Enter location"
+                                                value={formData.to_location}
+                                                onChange={(e) => updateForm('to_location', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="input-label flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        End Date
-                                    </label>
-                                    <input
-                                        type="date"
-                                        className="input"
-                                        value={formData.end_date}
-                                        min={formData.start_date}
-                                        onChange={(e) => updateForm('end_date', e.target.value)}
-                                    />
+                                {/* Amount */}
+                                <div className="pt-4 border-t border-neutral-100 space-y-2">
+                                    <div className="flex justify-between items-center px-1">
+                                        <label className="font-bold text-black text-lg">Total Amount</label>
+                                        <span className="text-xs text-neutral-500 font-medium bg-neutral-100 px-2 py-1 rounded-md">
+                                            {calculateDays()} days × ₹{formData.selectedCar?.daily_rate || 0}
+                                        </span>
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-lg">₹</span>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-neutral-900 border-none rounded-2xl py-4 pl-10 pr-4 text-white text-2xl font-bold placeholder:text-neutral-600 focus:ring-0"
+                                            placeholder={suggestedAmount().toString()}
+                                            value={formData.total_amount}
+                                            onChange={(e) => updateForm('total_amount', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="input-label flex items-center gap-2">
-                                        <Clock className="w-4 h-4" />
-                                        End Time
-                                    </label>
-                                    <input
-                                        type="time"
-                                        className="input"
-                                        value={formData.end_time}
-                                        onChange={(e) => updateForm('end_time', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="input-label flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    Pickup Location
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input"
-                                    placeholder="Enter pickup location"
-                                    value={formData.from_location}
-                                    onChange={(e) => updateForm('from_location', e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="input-label flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    Drop Location
-                                </label>
-                                <input
-                                    type="text"
-                                    className="input"
-                                    placeholder="Enter drop location"
-                                    value={formData.to_location}
-                                    onChange={(e) => updateForm('to_location', e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="input-label flex items-center gap-2">
-                                    <IndianRupee className="w-4 h-4" />
-                                    Total Amount
-                                </label>
-                                <input
-                                    type="number"
-                                    className="input"
-                                    placeholder={`Suggested: ₹${suggestedAmount()}`}
-                                    value={formData.total_amount}
-                                    onChange={(e) => updateForm('total_amount', e.target.value)}
-                                />
-                                <p className="text-xs text-dark-500 mt-1">
-                                    {calculateDays()} days × ₹{formData.selectedCar?.daily_rate || 0} = ₹{suggestedAmount()}
-                                </p>
                             </div>
                         </div>
                     )}
 
                     {/* Step 4: Confirmation */}
                     {step === 4 && (
-                        <div className="animate-fade-in">
-                            <h2 className="text-lg font-semibold text-dark-100 mb-4">
-                                Confirm Booking
-                            </h2>
+                        <div className="animate-fade-in pb-8">
+                            <div className="text-center mb-8">
+                                <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-black/20">
+                                    <Check className="w-10 h-10 text-white" />
+                                </div>
+                                <h1 className="text-2xl font-bold text-black">Confirm Booking</h1>
+                                <p className="text-neutral-500">Please review the details below</p>
+                            </div>
 
-                            <div className="space-y-4">
+                            <div className="bg-neutral-50 rounded-3xl p-6 space-y-6">
+                                {/* Car & Amount */}
+                                <div className="flex justify-between items-start border-b border-neutral-200 pb-6">
+                                    <div>
+                                        <h3 className="font-bold text-lg text-black">{formData.selectedCar?.make} {formData.selectedCar?.model}</h3>
+                                        <p className="text-sm text-neutral-500">{formData.selectedCar?.license_plate}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <h3 className="font-bold text-lg text-black">₹{formData.total_amount || suggestedAmount()}</h3>
+                                        <p className="text-sm text-neutral-500">{calculateDays()} Days</p>
+                                    </div>
+                                </div>
+
+                                {/* Timeline */}
+                                <div className="flex items-center gap-4">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-2 h-2 rounded-full bg-black" />
+                                        <div className="w-0.5 h-12 bg-neutral-200" />
+                                        <div className="w-2 h-2 rounded-full border-2 border-black bg-white" />
+                                    </div>
+                                    <div className="flex-1 space-y-4">
+                                        <div>
+                                            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Pickup</p>
+                                            <p className="font-semibold text-black">{formData.start_date}, {formData.start_time}</p>
+                                            {formData.from_location && <p className="text-sm text-neutral-500 truncate">{formData.from_location}</p>}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Return</p>
+                                            <p className="font-semibold text-black">{formData.end_date}, {formData.end_time}</p>
+                                            {formData.to_location && <p className="text-sm text-neutral-500 truncate">{formData.to_location}</p>}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Customer */}
-                                <div className="card p-4">
-                                    <h3 className="text-sm font-medium text-dark-400 mb-2">Customer</h3>
-                                    <p className="text-dark-100 font-medium">{formData.customer_name}</p>
-                                    <p className="text-dark-300">{formData.customer_phone}</p>
+                                <div className="border-t border-neutral-200 pt-6 flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-neutral-200 flex items-center justify-center">
+                                        <User className="w-6 h-6 text-neutral-500" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-black">{formData.customer_name}</p>
+                                        <p className="text-sm text-neutral-500">{formData.customer_phone}</p>
+                                    </div>
                                     {hasDocuments && (
-                                        <p className="text-xs text-green-400 mt-2 flex items-center gap-1">
-                                            <Check className="w-3 h-3" />
-                                            Documents attached
-                                        </p>
+                                        <div className="ml-auto bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+                                            Verified
+                                        </div>
                                     )}
-                                </div>
-
-                                {/* Vehicle */}
-                                <div className="card p-4">
-                                    <h3 className="text-sm font-medium text-dark-400 mb-2">Vehicle</h3>
-                                    <p className="text-dark-100 font-medium">
-                                        {formData.selectedCar?.make} {formData.selectedCar?.model}
-                                    </p>
-                                    <p className="text-dark-300">{formData.selectedCar?.license_plate}</p>
-                                </div>
-
-                                {/* Duration */}
-                                <div className="card p-4">
-                                    <h3 className="text-sm font-medium text-dark-400 mb-2">Duration</h3>
-                                    <div className="flex items-center gap-2 text-dark-100">
-                                        <span>{formData.start_date}</span>
-                                        <ChevronRight className="w-4 h-4 text-dark-500" />
-                                        <span>{formData.end_date}</span>
-                                    </div>
-                                    <p className="text-dark-300 text-sm mt-1">
-                                        {formData.start_time} - {formData.end_time}
-                                    </p>
-                                </div>
-
-                                {/* Locations */}
-                                {(formData.from_location || formData.to_location) && (
-                                    <div className="card p-4">
-                                        <h3 className="text-sm font-medium text-dark-400 mb-2">Locations</h3>
-                                        {formData.from_location && (
-                                            <p className="text-dark-300 text-sm">From: {formData.from_location}</p>
-                                        )}
-                                        {formData.to_location && (
-                                            <p className="text-dark-300 text-sm">To: {formData.to_location}</p>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Amount */}
-                                <div className="card p-4 bg-primary-600/10 border-primary-600/20">
-                                    <h3 className="text-sm font-medium text-dark-400 mb-2">Total Amount</h3>
-                                    <p className="text-2xl font-bold text-primary-400">
-                                        ₹{formData.total_amount || suggestedAmount()}
-                                    </p>
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Bottom action */}
-                <div className="px-4 py-4 border-t border-dark-700/50 bg-dark-900">
-                    {step < 4 ? (
-                        <button
-                            onClick={handleNext}
-                            disabled={!canProceed()}
-                            className="btn-primary w-full"
-                        >
-                            Continue
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting}
-                            className="btn-success w-full"
-                        >
-                            {submitting ? (
-                                <span className="flex items-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                    Creating...
-                                </span>
-                            ) : (
-                                <>
-                                    <Check className="w-5 h-5" />
-                                    Create Booking
-                                </>
-                            )}
-                        </button>
-                    )}
+                {/* Bottom Action Bar */}
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-100 p-4 safe-area-bottom z-10">
+                    <div className="max-w-lg mx-auto">
+                        {step < 4 ? (
+                            <button
+                                onClick={handleNext}
+                                disabled={!canProceed()}
+                                className="w-full bg-black text-white font-bold text-lg h-14 rounded-2xl flex items-center justify-center gap-2 hover:bg-neutral-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+                            >
+                                Continue
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                                className="w-full bg-black text-white font-bold text-lg h-14 rounded-2xl flex items-center justify-center gap-2 hover:bg-neutral-800 active:scale-[0.98] transition-all disabled:opacity-70"
+                            >
+                                {submitting ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Confirming...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span>Confirm Booking</span>
+                                        <div className="w-1 h-1 bg-white/50 rounded-full" />
+                                        <span>₹{formData.total_amount || suggestedAmount()}</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </main>
         </div>

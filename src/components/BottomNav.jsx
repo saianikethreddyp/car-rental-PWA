@@ -55,45 +55,54 @@ export function BottomNav() {
             {showMore && (
                 <div className="fixed inset-0 z-40">
                     <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
                         onClick={() => setShowMore(false)}
                     />
-                    <div className="absolute bottom-16 right-4 left-4 max-w-sm ml-auto bg-dark-800 rounded-2xl border border-dark-700/50 shadow-xl animate-fade-in overflow-hidden">
-                        <div className="p-2">
-                            {moreMenuItems.map((item) => {
-                                const Icon = item.icon
-                                const isActive = location.pathname === item.path
-                                return (
-                                    <button
-                                        key={item.path}
-                                        onClick={() => {
-                                            navigate(item.path)
-                                            setShowMore(false)
-                                        }}
-                                        className={`
-                      w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-                      ${isActive
-                                                ? 'bg-primary-600/20 text-primary-400'
-                                                : 'text-dark-300 hover:bg-dark-700/50'
-                                            }
-                    `}
-                                    >
-                                        <Icon className="w-5 h-5" />
-                                        <span className="font-medium">{item.label}</span>
-                                    </button>
-                                )
-                            })}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up overflow-hidden max-w-lg mx-auto pb-safe-pb">
+                        <div className="p-4 pt-6">
+                            <div className="flex items-center justify-between mb-6 px-2">
+                                <h3 className="text-xl font-bold">More Options</h3>
+                                <button
+                                    onClick={() => setShowMore(false)}
+                                    className="p-2 bg-neutral-100 rounded-full"
+                                >
+                                    <X className="w-5 h-5 text-neutral-600" />
+                                </button>
+                            </div>
 
-                            {/* Divider */}
-                            <div className="h-px bg-dark-700/50 my-2" />
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                {moreMenuItems.map((item) => {
+                                    const Icon = item.icon
+                                    const isActive = location.pathname === item.path
+                                    return (
+                                        <button
+                                            key={item.path}
+                                            onClick={() => {
+                                                navigate(item.path)
+                                                setShowMore(false)
+                                            }}
+                                            className={`
+                                              flex flex-col items-center justify-center gap-3 p-4 rounded-2xl transition-all border
+                                              ${isActive
+                                                    ? 'bg-black text-white border-black'
+                                                    : 'bg-neutral-50 text-neutral-700 border-transparent hover:bg-neutral-100'
+                                                }
+                                            `}
+                                        >
+                                            <Icon className="w-6 h-6" />
+                                            <span className="font-medium text-sm">{item.label}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
 
                             {/* Sign Out */}
                             <button
                                 onClick={handleSignOut}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-600/10 transition-all"
+                                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-colors"
                             >
                                 <LogOut className="w-5 h-5" />
-                                <span className="font-medium">Sign Out</span>
+                                <span>Sign Out</span>
                             </button>
                         </div>
                     </div>
@@ -101,24 +110,26 @@ export function BottomNav() {
             )}
 
             {/* Bottom Navigation */}
-            <nav className="bottom-nav">
-                <div className="flex items-center justify-around max-w-lg mx-auto">
+            <nav className="bottom-nav bg-white border-t border-neutral-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+                <div className="flex items-center justify-around max-w-lg mx-auto px-2 relative">
                     {mainNavItems.map((item) => {
                         const Icon = item.icon
 
                         if (item.isMenu) {
+                            const active = isMoreActive || showMore
                             return (
                                 <button
                                     key="more"
                                     onClick={handleMoreClick}
-                                    className={`bottom-nav-item ${isMoreActive || showMore ? 'active' : ''}`}
+                                    className="bottom-nav-item flex-1 group"
                                 >
-                                    {showMore ? (
-                                        <X className="w-5 h-5 text-primary-400" />
-                                    ) : (
-                                        <Icon className={`w-5 h-5 ${isMoreActive ? 'text-primary-400' : ''}`} />
-                                    )}
-                                    <span className={`text-xs ${isMoreActive || showMore ? 'text-primary-400 font-medium' : ''}`}>
+                                    <div className={`
+                                        p-1.5 rounded-full transition-all duration-200
+                                        ${active ? 'text-black' : 'text-neutral-400 group-hover:text-neutral-600'}
+                                    `}>
+                                        <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
+                                    </div>
+                                    <span className={`text-[10px] font-medium transition-colors ${active ? 'text-black' : 'text-neutral-400'}`}>
                                         {item.label}
                                     </span>
                                 </button>
@@ -127,16 +138,15 @@ export function BottomNav() {
 
                         if (item.isAction) {
                             return (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className="flex items-center justify-center -mt-6"
-                                    onClick={() => setShowMore(false)}
-                                >
-                                    <div className="w-14 h-14 rounded-full bg-primary-600 flex items-center justify-center shadow-lg shadow-primary-600/30 active:scale-95 transition-transform">
-                                        <Icon className="w-6 h-6 text-white" />
-                                    </div>
-                                </NavLink>
+                                <div key={item.path} className="flex-1 flex justify-center -mt-6">
+                                    <NavLink
+                                        to={item.path}
+                                        onClick={() => setShowMore(false)}
+                                        className="flex items-center justify-center shadow-lg shadow-black/20 rounded-full bg-black text-white w-14 h-14 active:scale-95 transition-transform"
+                                    >
+                                        <Icon className="w-7 h-7" strokeWidth={2.5} />
+                                    </NavLink>
+                                </div>
                             )
                         }
 
@@ -147,10 +157,15 @@ export function BottomNav() {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setShowMore(false)}
-                                className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+                                className="bottom-nav-item flex-1 group"
                             >
-                                <Icon className={`w-5 h-5 ${isActive ? 'text-primary-400' : ''}`} />
-                                <span className={`text-xs ${isActive ? 'text-primary-400 font-medium' : ''}`}>
+                                <div className={`
+                                    p-1.5 rounded-full transition-all duration-200
+                                    ${isActive ? 'text-black' : 'text-neutral-400 group-hover:text-neutral-600'}
+                                `}>
+                                    <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+                                </div>
+                                <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-black' : 'text-neutral-400'}`}>
                                     {item.label}
                                 </span>
                             </NavLink>
@@ -161,3 +176,4 @@ export function BottomNav() {
         </>
     )
 }
+

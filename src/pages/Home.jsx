@@ -10,8 +10,7 @@ import {
     Plus,
     ChevronRight,
     RefreshCw,
-    ArrowDownLeft,
-    ArrowUpRight,
+    TrendingUp,
     AlertTriangle
 } from 'lucide-react'
 
@@ -21,7 +20,6 @@ export default function Home() {
     const { stats, loading: statsLoading, refetch: refetchStats } = useDashboardStats()
     const { cars } = useCars()
 
-    // Check for insurance alerts
     const getInsuranceAlerts = () => {
         const today = new Date()
         let expired = 0
@@ -46,115 +44,62 @@ export default function Home() {
     }
 
     const quickActions = [
-        { icon: Plus, label: 'New\nBooking', path: '/new-booking', color: 'bg-primary-600' },
-        { icon: Calendar, label: 'Rentals', path: '/rentals', color: 'bg-blue-600' },
-        { icon: Car, label: 'Cars', path: '/cars', color: 'bg-green-600' },
-        { icon: Users, label: 'Customers', path: '/customers', color: 'bg-purple-600' },
+        { icon: Plus, label: 'New Booking', path: '/new-booking' },
+        { icon: Calendar, label: 'Rentals', path: '/rentals' },
+        { icon: Car, label: 'Inventory', path: '/cars' },
+        { icon: Users, label: 'Customers', path: '/customers' },
     ]
 
     return (
-        <div className="flex-1 flex flex-col pb-20">
+        <div className="flex-1 flex flex-col pb-safe-pb">
             <Header
-                title="Dashboard"
+                title="Dhanya Fleet"
                 rightAction={
                     <button
                         onClick={handleRefresh}
-                        className="p-2 rounded-full hover:bg-dark-700/50 active:scale-95 transition-all"
+                        className="p-2 -mr-2 rounded-full hover:bg-neutral-100 active:scale-95 transition-all"
                     >
-                        <RefreshCw className="w-5 h-5 text-dark-400" />
+                        <RefreshCw className="w-5 h-5 text-neutral-600" />
                     </button>
                 }
             />
 
-            <main className="flex-1 overflow-auto px-4 py-4 space-y-5">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="card p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-green-600/20 flex items-center justify-center">
-                                <Car className="w-4 h-4 text-green-400" />
-                            </div>
-                            <span className="text-xs text-dark-400">Available</span>
-                        </div>
-                        <p className="text-2xl font-bold text-dark-100">
-                            {statsLoading ? '-' : stats.availableCars}
-                        </p>
-                    </div>
-
-                    <div className="card p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center">
-                                <Calendar className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <span className="text-xs text-dark-400">Active Rentals</span>
-                        </div>
-                        <p className="text-2xl font-bold text-dark-100">
-                            {statsLoading ? '-' : stats.activeRentals}
-                        </p>
-                    </div>
-
-                    <div className="card p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-primary-600/20 flex items-center justify-center">
-                                <IndianRupee className="w-4 h-4 text-primary-400" />
-                            </div>
-                            <span className="text-xs text-dark-400">This Month</span>
-                        </div>
-                        <p className="text-2xl font-bold text-primary-400">
-                            {statsLoading ? '-' : `₹${stats.monthlyRevenue.toLocaleString()}`}
-                        </p>
-                    </div>
-
-                    <div className="card p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-purple-600/20 flex items-center justify-center">
-                                <Users className="w-4 h-4 text-purple-400" />
-                            </div>
-                            <span className="text-xs text-dark-400">Customers</span>
-                        </div>
-                        <p className="text-2xl font-bold text-dark-100">
-                            {statsLoading ? '-' : stats.totalCustomers}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Insurance Alerts */}
+            <main className="flex-1 overflow-auto px-4 py-6 space-y-8 pb-24">
+                {/* Insurance Alert Banner */}
                 {(alerts.expired > 0 || alerts.expiringSoon > 0) && (
                     <button
                         onClick={() => navigate('/insurance')}
-                        className="w-full card p-4 bg-yellow-500/10 border-yellow-500/30 flex items-center gap-3"
+                        className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4 active:scale-98 transition-transform"
                     >
-                        <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                            <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                        <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-amber-700" />
                         </div>
                         <div className="flex-1 text-left">
-                            <p className="font-medium text-yellow-400">Insurance Alerts</p>
-                            <p className="text-sm text-dark-400">
-                                {alerts.expired > 0 && `${alerts.expired} expired`}
-                                {alerts.expired > 0 && alerts.expiringSoon > 0 && ', '}
+                            <h3 className="font-semibold text-amber-900">Action Required</h3>
+                            <p className="text-sm text-amber-700">
+                                {alerts.expired > 0 && `${alerts.expired} expired, `}
                                 {alerts.expiringSoon > 0 && `${alerts.expiringSoon} expiring soon`}
                             </p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-dark-400" />
+                        <ChevronRight className="w-5 h-5 text-amber-400" />
                     </button>
                 )}
 
-                {/* Quick Actions */}
+                {/* Quick Actions (Uber Style) */}
                 <div>
-                    <h2 className="text-sm font-medium text-dark-400 mb-3">Quick Actions</h2>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="flex items-center justify-between gap-4">
                         {quickActions.map((action) => {
                             const Icon = action.icon
                             return (
                                 <button
                                     key={action.path}
                                     onClick={() => navigate(action.path)}
-                                    className="flex flex-col items-center gap-2"
+                                    className="flex flex-col items-center gap-2 group flex-1"
                                 >
-                                    <div className={`w-14 h-14 rounded-2xl ${action.color} flex items-center justify-center shadow-lg active:scale-95 transition-transform`}>
-                                        <Icon className="w-6 h-6 text-white" />
+                                    <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center transition-all group-active:scale-95 group-active:bg-neutral-200">
+                                        <Icon className="w-6 h-6 text-black" strokeWidth={1.5} />
                                     </div>
-                                    <span className="text-xs text-dark-300 text-center whitespace-pre-line leading-tight">
+                                    <span className="text-xs font-medium text-neutral-900 text-center leading-tight">
                                         {action.label}
                                     </span>
                                 </button>
@@ -163,71 +108,62 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Today's Summary */}
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        onClick={() => navigate('/rentals')}
-                        className="card p-4 flex items-center gap-3"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-green-600/20 flex items-center justify-center">
-                            <ArrowUpRight className="w-5 h-5 text-green-400" />
+                {/* Todays Overview - Clean Stats */}
+                <div>
+                    <h2 className="text-lg font-bold text-black mb-4 px-1">Today's Overview</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-neutral-900 text-white rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3 text-neutral-400">
+                                <Car className="w-4 h-4" />
+                                <span className="text-xs font-semibold uppercase tracking-wider">Available</span>
+                            </div>
+                            <p className="text-3xl font-bold">
+                                {statsLoading ? '-' : stats.availableCars}
+                            </p>
+                            <p className="text-sm text-neutral-400 mt-1">Ready to rent</p>
                         </div>
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-dark-100">{pickupCount}</p>
-                            <p className="text-xs text-dark-400">Pickups Today</p>
-                        </div>
-                    </button>
 
-                    <button
-                        onClick={() => navigate('/rentals')}
-                        className="card p-4 flex items-center gap-3"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center">
-                            <ArrowDownLeft className="w-5 h-5 text-blue-400" />
+                        <div className="bg-white border border-neutral-100 text-neutral-900 rounded-2xl p-5 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3 text-neutral-500">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className="text-xs font-semibold uppercase tracking-wider">Revenue</span>
+                            </div>
+                            <p className="text-3xl font-bold tracking-tight">
+                                {statsLoading ? '-' : `₹${(stats.monthlyRevenue / 1000).toFixed(1)}k`}
+                            </p>
+                            <p className="text-sm text-neutral-400 mt-1">This Month</p>
                         </div>
-                        <div className="text-left">
-                            <p className="text-2xl font-bold text-dark-100">{returnCount}</p>
-                            <p className="text-xs text-dark-400">Returns Today</p>
-                        </div>
-                    </button>
+                    </div>
                 </div>
 
-                {/* Today's Schedule Preview */}
+                {/* Schedule Feed */}
                 <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm font-medium text-dark-400">Today's Schedule</h2>
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <h2 className="text-lg font-bold text-black">Up Next</h2>
                         <button
                             onClick={() => navigate('/schedule')}
-                            className="text-sm text-primary-400 flex items-center gap-1"
+                            className="text-sm font-semibold text-neutral-500 hover:text-black transition-colors"
                         >
-                            View all
-                            <ChevronRight className="w-4 h-4" />
+                            See All
                         </button>
                     </div>
 
                     {scheduleLoading ? (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             <ScheduleCardSkeleton />
                             <ScheduleCardSkeleton />
                         </div>
                     ) : schedule.length === 0 ? (
-                        <div className="card p-6 text-center">
-                            <Calendar className="w-12 h-12 text-dark-600 mx-auto mb-2" />
-                            <p className="text-dark-400">No pickups or returns today</p>
+                        <div className="bg-neutral-50 rounded-3xl p-8 text-center border dashed border-neutral-200">
+                            <Calendar className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                            <h3 className="font-semibold text-neutral-900">No events today</h3>
+                            <p className="text-sm text-neutral-400 mt-1">Enjoy your free time!</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {schedule.slice(0, 3).map((item, index) => (
                                 <ScheduleCard key={`${item.id}-${index}`} item={item} />
                             ))}
-                            {schedule.length > 3 && (
-                                <button
-                                    onClick={() => navigate('/schedule')}
-                                    className="w-full py-2 text-sm text-primary-400 text-center"
-                                >
-                                    +{schedule.length - 3} more items
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>

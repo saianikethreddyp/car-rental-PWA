@@ -9,7 +9,12 @@ import {
     Cloud,
     RefreshCw,
     Smartphone,
-    Info
+    Info,
+    ChevronRight,
+    Settings,
+    Bell,
+    Shield,
+    Upload
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -37,132 +42,138 @@ export default function Profile() {
     }
 
     return (
-        <div className="flex-1 flex flex-col pb-20">
-            <Header title="Profile" />
+        <div className="flex-1 flex flex-col pb-safe-pb bg-white h-full">
+            <Header title="Account" />
 
-            <main className="flex-1 overflow-auto px-4 py-4 space-y-6">
-                {/* User info */}
-                <div className="card p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-primary-600/20 flex items-center justify-center">
-                            <User className="w-8 h-8 text-primary-400" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-semibold text-dark-100">
-                                {userRole?.name || 'Worker'}
-                            </h2>
-                            <p className="text-dark-400">{user?.email}</p>
-                            <span className="inline-flex items-center px-2 py-0.5 mt-1 rounded-full text-xs font-medium bg-primary-600/20 text-primary-400">
+            <main className="flex-1 overflow-auto pb-24">
+                {/* User Header */}
+                <div className="px-6 py-8 flex items-center gap-5 border-b border-neutral-100">
+                    <div className="w-20 h-20 rounded-full bg-neutral-900 text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-neutral-200">
+                        {userRole?.name ? userRole.name.charAt(0).toUpperCase() : <User />}
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-black">
+                            {userRole?.name || 'Worker'}
+                        </h1>
+                        <p className="text-neutral-500 font-medium">{user?.email}</p>
+                        <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200">
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
                                 {userRole?.role || 'worker'}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* Sync status */}
-                <div className="card p-4">
-                    <h3 className="text-sm font-medium text-dark-400 mb-3 flex items-center gap-2">
-                        <Cloud className="w-4 h-4" />
-                        Sync Status
-                    </h3>
-
-                    <div className="space-y-3">
-                        {/* Connection status */}
-                        <div className="flex items-center justify-between">
-                            <span className="text-dark-300 flex items-center gap-2">
+                {/* Stats / Sync Status */}
+                <div className="px-6 py-6">
+                    <div className="bg-neutral-50 rounded-2xl p-5 border border-neutral-100">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-black flex items-center gap-2">
+                                <Cloud className="w-5 h-5" />
+                                Sync Status
+                            </h3>
+                            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${isOnline ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                 {isOnline ? (
                                     <>
-                                        <Wifi className="w-4 h-4 text-green-400" />
-                                        Online
+                                        <Wifi className="w-3 h-3" />
+                                        ONLINE
                                     </>
                                 ) : (
                                     <>
-                                        <WifiOff className="w-4 h-4 text-red-400" />
-                                        Offline
+                                        <WifiOff className="w-3 h-3" />
+                                        OFFLINE
                                     </>
                                 )}
-                            </span>
-                            <span className={`text-sm ${isOnline ? 'text-green-400' : 'text-red-400'}`}>
-                                {isOnline ? 'Connected' : 'Disconnected'}
-                            </span>
+                            </div>
                         </div>
 
-                        {/* Pending items */}
                         <div className="flex items-center justify-between">
-                            <span className="text-dark-300">Pending changes</span>
-                            <span className={`text-sm ${pendingCount > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
-                                {pendingCount} items
+                            <span className="text-neutral-500 font-medium">Pending Changes</span>
+                            <span className={`text-lg font-bold ${pendingCount > 0 ? 'text-amber-500' : 'text-green-500'}`}>
+                                {pendingCount}
                             </span>
                         </div>
 
-                        {/* Sync button */}
                         {pendingCount > 0 && (
                             <button
                                 onClick={handleSync}
                                 disabled={!isOnline || isSyncing}
-                                className="btn-secondary w-full mt-2"
+                                className="w-full mt-4 bg-black text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
                             >
-                                {isSyncing ? (
-                                    <>
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        Syncing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <RefreshCw className="w-4 h-4" />
-                                        Sync Now
-                                    </>
-                                )}
+                                {isSyncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                {isSyncing ? 'Syncing...' : 'Sync Now'}
                             </button>
                         )}
                     </div>
                 </div>
 
-                {/* App info */}
-                <div className="card p-4">
-                    <h3 className="text-sm font-medium text-dark-400 mb-3 flex items-center gap-2">
-                        <Smartphone className="w-4 h-4" />
-                        App Info
-                    </h3>
-
-                    <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                            <span className="text-dark-400">Version</span>
-                            <span className="text-dark-300">1.0.0</span>
+                {/* Menu List */}
+                <div className="px-6 space-y-2">
+                    <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-neutral-50 active:bg-neutral-100 transition-all border border-transparent hover:border-neutral-100">
+                        <div className="flex items-center gap-4">
+                            <Bell className="w-6 h-6 text-black" />
+                            <span className="font-bold text-black text-lg">Notifications</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-dark-400">PWA</span>
-                            <span className="text-dark-300">
-                                {window.matchMedia('(display-mode: standalone)').matches ? 'Installed' : 'Browser'}
+                        <ChevronRight className="w-5 h-5 text-neutral-400" />
+                    </button>
+
+                    <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-neutral-50 active:bg-neutral-100 transition-all border border-transparent hover:border-neutral-100">
+                        <div className="flex items-center gap-4">
+                            <Settings className="w-6 h-6 text-black" />
+                            <span className="font-bold text-black text-lg">Settings</span>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-neutral-400" />
+                    </button>
+
+                    <button className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-neutral-50 active:bg-neutral-100 transition-all border border-transparent hover:border-neutral-100">
+                        <div className="flex items-center gap-4">
+                            <Shield className="w-6 h-6 text-black" />
+                            <span className="font-bold text-black text-lg">Privacy & Security</span>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-neutral-400" />
+                    </button>
+
+                    <div className="h-px bg-neutral-100 my-4" />
+
+                    <div className="px-4 py-2">
+                        <div className="flex items-center justify-between text-sm text-neutral-500 mb-2">
+                            <span>App Version</span>
+                            <span className="font-medium text-black">1.1.0</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-neutral-500">
+                            <span>Mode</span>
+                            <span className="font-medium text-black">
+                                {window.matchMedia('(display-mode: standalone)').matches ? 'App' : 'Browser'}
                             </span>
                         </div>
                     </div>
-                </div>
 
-                {/* PWA Install hint */}
-                {!window.matchMedia('(display-mode: standalone)').matches && (
-                    <div className="card p-4 bg-primary-600/10 border-primary-600/20">
-                        <div className="flex items-start gap-3">
-                            <Info className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" />
+                    {!window.matchMedia('(display-mode: standalone)').matches && (
+                        <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-start gap-3">
+                            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                             <div>
-                                <p className="text-dark-200 font-medium">Install the app</p>
-                                <p className="text-sm text-dark-400 mt-1">
-                                    Tap the share button and select "Add to Home Screen" for the best experience.
+                                <p className="font-bold text-blue-900">Install App</p>
+                                <p className="text-sm text-blue-700 leading-relaxed mt-1">
+                                    Add to your home screen for the best experience and offline access.
                                 </p>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Sign out */}
-                <button
-                    onClick={handleSignOut}
-                    disabled={loading}
-                    className="btn w-full bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30"
-                >
-                    <LogOut className="w-5 h-5" />
-                    Sign Out
-                </button>
+                    <div className="pt-6">
+                        <button
+                            onClick={handleSignOut}
+                            disabled={loading}
+                            className="w-full py-4 rounded-xl bg-neutral-100 text-neutral-900 font-bold text-lg hover:bg-neutral-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            Log Out
+                        </button>
+                        <p className="text-center text-xs text-neutral-400 mt-4">
+                            Dhanya Rentals Worker App • {new Date().getFullYear()}
+                        </p>
+                    </div>
+                </div>
             </main>
         </div>
     )
