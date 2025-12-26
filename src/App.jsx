@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { BottomNav } from './components/BottomNav'
 import { InstallBanner } from './components/InstallPrompt'
+import SupportButton from './components/SupportButton'
 
 // Pages
 import Login from './pages/Login'
@@ -46,6 +47,7 @@ function AppLayout({ children }) {
             <InstallBanner />
             {children}
             <BottomNav />
+            <SupportButton />
         </div>
     )
 }
