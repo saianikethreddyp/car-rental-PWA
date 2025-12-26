@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Car, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { InstallBanner } from '../components/InstallPrompt'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -26,6 +27,8 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+            {/* PWA Install Banner for new users */}
+            <InstallBanner />
             <div className="w-full max-w-sm">
                 {/* Logo */}
                 <div className="mb-10">
