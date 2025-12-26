@@ -1,137 +1,104 @@
-# Dhanya Worker PWA
+# Dhanya Car Rentals - Worker PWA
 
-A Progressive Web App for shop workers to manage car rentals on the go.
+A Progressive Web App (PWA) for field workers to manage car rentals on-the-go.
+
+![PWA](https://img.shields.io/badge/PWA-Installable-green) ![React](https://img.shields.io/badge/React-18-blue) ![Vite](https://img.shields.io/badge/Vite-5-purple)
 
 ## 🚀 Features
 
-- **Quick Booking** - Create rentals in a few taps
-- **View Cars** - See all vehicles and their status
-- **Today's Schedule** - View pickups and returns
-- **Update Status** - Change car status (available/rented/maintenance)
-- **Offline Support** - Works without internet, syncs when back online
-- **Real-time Sync** - Changes reflect instantly across Admin CRM
+- **Installable PWA** - Works like a native app
+- **Offline Support** - Basic functionality without internet
+- **Quick Actions** - Fast access to common tasks
+- **Mobile-First Design** - Optimized for phones
+- **WhatsApp Support** - Quick contact support
 
-## 📱 PWA Features
+### Core Features
+- View and manage rentals
+- Update rental status
+- View fleet availability
+- Customer information access
+- Today's schedule overview
 
-- Installable on mobile devices
-- Works offline
-- Push notifications (optional)
-- Full-screen app experience
+## 📋 Tech Stack
 
-## 🛠️ Setup
+- **Framework:** React 18 + Vite
+- **Styling:** Tailwind CSS
+- **PWA:** Vite PWA Plugin
+- **Authentication:** Supabase Auth
+- **API Client:** Axios
+- **Deployment:** Vercel
 
-### 1. Install Dependencies
+## 🛠️ Setup Instructions
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Backend API running
+- Supabase project configured
+
+### 1. Clone the Repository
 
 ```bash
-cd Dhanya-Worker-PWA
+git clone https://github.com/saianikethreddyp/car-rental-PWA.git
+cd car-rental-PWA
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-### 2. Configure Environment
+### 3. Environment Variables
 
-Copy the `.env` file from the main Dhanya CRM (same Supabase credentials):
-
-```bash
-cp ../.env .env
-```
-
-Or create a new `.env` file:
+Create a `.env` file:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=https://backend-car-rental-production-a9db.up.railway.app/api
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### 3. Run Development Server
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-The app will run on `http://localhost:5174`
+Open `http://localhost:5174` in your browser.
 
-### 4. Build for Production
-
-```bash
-npm run build
-npm run preview
-```
-
-## 📂 Project Structure
-
-```
-Dhanya-Worker-PWA/
-├── public/                 # Static assets
-├── src/
-│   ├── components/         # Reusable UI components
-│   │   ├── BottomNav.jsx   # Bottom navigation
-│   │   ├── Header.jsx      # Page header with sync indicator
-│   │   ├── CarCard.jsx     # Car display card
-│   │   └── ScheduleCard.jsx # Schedule item card
-│   ├── context/
-│   │   ├── AuthContext.jsx # Authentication state
-│   │   └── SyncContext.jsx # Offline sync management
-│   ├── hooks/
-│   │   └── useData.js      # Data fetching hooks with realtime
-│   ├── pages/
-│   │   ├── Login.jsx       # Login page
-│   │   ├── Home.jsx        # Dashboard
-│   │   ├── Cars.jsx        # Car list & status update
-│   │   ├── Schedule.jsx    # Today's schedule
-│   │   ├── NewBooking.jsx  # Multi-step booking form
-│   │   └── Profile.jsx     # User profile & settings
-│   ├── utils/
-│   │   └── offlineStorage.js # IndexedDB helpers
-│   ├── App.jsx             # Main app with routing
-│   ├── main.jsx            # Entry point with PWA
-│   ├── index.css           # Tailwind CSS
-│   └── supabaseClient.js   # Supabase connection
-├── index.html
-├── vite.config.js          # Vite + PWA config
-├── tailwind.config.js
-└── package.json
-```
-
-## 🔐 Worker Permissions
-
-Workers can:
-- ✅ View all cars
-- ✅ Update car status
-- ✅ Create new bookings
-- ✅ View today's schedule
-- ✅ Complete pickups/returns
-
-Workers cannot:
-- ❌ Delete cars
-- ❌ View payments
-- ❌ Access settings
-- ❌ Export data
-
-## 🔄 Data Sync
-
-The app uses the **same Supabase database** as the Admin CRM:
-
-- Changes made in Worker PWA appear instantly in Admin CRM
-- Changes made in Admin CRM appear instantly in Worker PWA
-- Offline changes are queued and synced when back online
-
-## 📦 Deployment
-
-Deploy to Vercel:
+### 5. Build for Production
 
 ```bash
 npm run build
-vercel deploy
 ```
 
-Or set up automatic deployment from GitHub.
+## 📱 Installing the PWA
 
-## 🎨 Customization
+### On Mobile (Android/iOS)
 
-- Colors: Edit `tailwind.config.js`
-- Icons: Uses [Lucide React](https://lucide.dev/)
-- Styling: Tailwind CSS classes in components
+1. Open the app URL in Chrome/Safari
+2. Tap "Add to Home Screen" or install prompt
+3. App will appear on your home screen
 
----
+### On Desktop
 
-**Built with:** React 19, Vite 7, Supabase, Tailwind CSS, PWA
+1. Open the app URL in Chrome
+2. Click install icon in address bar
+3. App will open in its own window
+
+## 🚀 Deployment (Vercel)
+
+```bash
+vercel
+```
+
+Set environment variables in Vercel dashboard.
+
+## 📞 Support
+
+WhatsApp support button available in the app.
+
+## 📄 License
+
+Proprietary - Dhanya Car Rentals
